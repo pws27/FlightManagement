@@ -21,7 +21,7 @@ def view_all_flights(connection):
 
     return cursor.fetchall()
 
-def get_flights_by_criteria(connection, destination_city=None, status=None, departure_date=None):
+def get_flights_by_criteria(connection, destination_id=None, status=None, departure_date=None):
     cursor = connection.cursor()
 
     query = """
@@ -44,15 +44,15 @@ def get_flights_by_criteria(connection, destination_city=None, status=None, depa
 
     params = []
 
-    if destination_city:
-        query += " AND d.city LIKE ?"
-        params.append(f"%{destination_city}%")
+    if destination_id is not None:
+        query += " AND f.destination_id = ?"
+        params.append(destination_id)
 
-    if status:
+    if status is not None:
         query += " AND f.status = ?"
         params.append(status)
 
-    if departure_date:
+    if departure_date is not None:
         query += " AND DATE(f.departure_datetime) = ?"
         params.append(departure_date)
 
@@ -125,3 +125,56 @@ def add_flight(
     ))
 
     connection.commit()
+
+def get_all_pilots(connection):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            pilot_id,
+            first_name,
+            last_name
+        FROM pilots
+        ORDER BY pilot_id
+    """)
+
+    return cursor.fetchall()
+
+def get_all_destinations_by_airport_code(connection):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            airport_code,
+            city,
+            country,
+            destination_id
+        FROM destinations
+        ORDER BY airport_code
+    """)
+
+    return cursor.fetchall()
+
+def get_flights_by_pilot_id(connection, pilot_id):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            f.flight_id,
+            f.flight_number,
+            d.city,
+            d.country,
+            f.departure_datetime,
+            f.status,
+            p.first_name,
+            p.last_name
+        FROM flights f
+        JOIN destinations d
+            ON f.destination_id = d.destination_id
+        JOIN pilots p
+            ON f.pilot_id = p.pilot_id
+        WHERE p.pilot_id = ?
+        ORDER BY f.departure_datetime
+    """, (pilot_id,))
+
+    return cursor.fetchall()

@@ -1,5 +1,6 @@
 import random
 import sqlite3
+import os
 from datetime import datetime, timedelta
 
 DB_NAME = "flight_management.db"
@@ -39,21 +40,37 @@ FLIGHT_STATUSES = [
     "Departed"
 ]
 
+def initialise_database(reset=False):
+    if reset:
+        connection = get_connection()
+
+        drop_tables(connection)
+        create_tables(connection)
+        seed_data(connection)
+
+        connection.close()
+
+        return
+
+    if database_exists():
+        return
+
+    connection = get_connection()
+
+    create_tables(connection)
+    seed_data(connection)
+
+    connection.close()
+
+
+def database_exists():
+    return os.path.exists(DB_NAME)
+
 
 def get_connection():
     connection = sqlite3.connect(DB_NAME)
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
-
-
-def create_database():
-    connection = get_connection()
-
-    drop_tables(connection)
-    create_tables(connection)
-    seed_data(connection)
-
-    connection.close()
 
 
 def drop_tables(connection):

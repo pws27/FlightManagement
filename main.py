@@ -1,15 +1,24 @@
-from database import create_database, get_connection
-from menu import run_menu
+import sys
+
+from cli.app import run_cli
+from database import (
+    get_connection,
+    initialise_database,
+)
+
 
 def main():
-    create_database()
-    print("Database created and seeded successfully.")
+    reset = "--reset" in sys.argv
+
+    initialise_database(reset=reset)
 
     connection = get_connection()
-    run_menu(connection)
-    connection.close()
 
-    print("Database connection closed")
+    try:
+        run_cli(connection)
+    finally:
+        connection.close()
+
 
 if __name__ == "__main__":
     main()
