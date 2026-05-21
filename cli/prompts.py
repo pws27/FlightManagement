@@ -1,9 +1,17 @@
 from datetime import datetime
+from constants import DATE_FORMAT, DATETIME_FORMAT
+
+from validators import (
+    is_valid_airport_code,
+    is_valid_flight_number,
+)
 
 def prompt_for_selection(prompt, rows, display_function):
-    while True:
-        display_function(rows)
+    display_function(rows)
+    if not rows:
+        return None
 
+    while True:
         choice = input(f"{prompt}: ").strip()
 
         try:
@@ -41,9 +49,11 @@ def prompt_for_value_from_list(prompt, values):
 
 
 def prompt_for_code_selection(prompt, rows, display_function):
-    while True:
-        display_function(rows)
+    display_function(rows)
+    if not rows:
+        return None
 
+    while True:
         choice = input(f"{prompt}: ").strip().upper()
 
         for row in rows:
@@ -54,10 +64,13 @@ def prompt_for_code_selection(prompt, rows, display_function):
 
 
 def prompt_for_optional_code_selection(prompt, rows, display_function):
+    print("ANY - Any destination")
+    display_function(rows)
+    
+    if not rows:
+        return None
+    
     while True:
-        print("\nANY - Any destination")
-
-        display_function(rows)
 
         choice = input(f"{prompt}: ").strip().upper()
 
@@ -113,7 +126,7 @@ def prompt_for_datetime(prompt):
         value = input(f"{prompt} YYYY-MM-DD HH:MM: ").strip()
 
         try:
-            datetime.strptime(value, "%Y-%m-%d %H:%M")
+            datetime.strptime(value, DATETIME_FORMAT)
             return value
         except ValueError:
             print("Invalid date/time format. Please use YYYY-MM-DD HH:MM.")
@@ -127,7 +140,29 @@ def prompt_for_optional_date(prompt):
             return None
 
         try:
-            datetime.strptime(value, "%Y-%m-%d")
+            datetime.strptime(value, DATE_FORMAT)
             return value
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
+
+def prompt_for_airport_code(prompt):
+    while True:
+        value = input(f"{prompt}: ").strip().upper()
+
+        if is_valid_airport_code(value):
+            return value
+
+        print("Airport code must be exactly 3 letters.")
+
+
+def prompt_for_flight_number(prompt):
+    while True:
+        value = input(f"{prompt}: ").strip().upper()
+
+        if is_valid_flight_number(value):
+            return value
+
+        print(
+            "Flight number must start with "
+            "'UOB' followed by digits."
+        )

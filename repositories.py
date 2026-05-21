@@ -1,9 +1,8 @@
-def view_all_flights(connection):
+def get_all_flight_details(connection):
     cursor = connection.cursor()
 
     cursor.execute("""
         SELECT
-            f.flight_id,
             f.flight_number,
             d.city,
             d.country,
@@ -26,7 +25,6 @@ def get_flights_by_criteria(connection, destination_id=None, status=None, depart
 
     query = """
         SELECT
-            f.flight_id,
             f.flight_number,
             d.city,
             d.country,
@@ -126,6 +124,33 @@ def add_flight(
 
     connection.commit()
 
+    return cursor.lastrowid
+
+def add_destination(
+    connection,
+    airport_code,
+    city,
+    country,
+):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO destinations (
+            airport_code,
+            city,
+            country
+        )
+        VALUES (?, ?, ?)
+    """, (
+        airport_code,
+        city,
+        country,
+    ))
+
+    connection.commit()
+
+    return cursor.lastrowid
+
 def get_all_pilots(connection):
     cursor = connection.cursor()
 
@@ -160,7 +185,6 @@ def get_flights_by_pilot_id(connection, pilot_id):
 
     cursor.execute("""
         SELECT
-            f.flight_id,
             f.flight_number,
             d.city,
             d.country,
@@ -178,3 +202,133 @@ def get_flights_by_pilot_id(connection, pilot_id):
     """, (pilot_id,))
 
     return cursor.fetchall()
+
+
+def get_all_flights_for_selection(connection):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            flight_id,
+            flight_number,
+            departure_datetime,
+            status
+        FROM flights
+        ORDER BY flight_id
+    """)
+
+    return cursor.fetchall()
+
+
+def update_flight_status(connection, flight_id, status):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE flights
+        SET status = ?
+        WHERE flight_id = ?
+    """, (status, flight_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def update_flight_departure_datetime(
+    connection,
+    flight_id,
+    departure_datetime,
+):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE flights
+        SET departure_datetime = ?
+        WHERE flight_id = ?
+    """, (departure_datetime, flight_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def delete_flight(connection, flight_id):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM flights
+        WHERE flight_id = ?
+    """, (flight_id,))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def assign_pilot_to_flight(connection, flight_id, pilot_id):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE flights
+        SET pilot_id = ?
+        WHERE flight_id = ?
+    """, (pilot_id, flight_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def update_destination_airport_code(connection, destination_id, airport_code):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE destinations
+        SET airport_code = ?
+        WHERE destination_id = ?
+    """, (airport_code, destination_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def update_destination_city(connection, destination_id, city):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE destinations
+        SET city = ?
+        WHERE destination_id = ?
+    """, (city, destination_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def update_destination_country(connection, destination_id, country):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE destinations
+        SET country = ?
+        WHERE destination_id = ?
+    """, (country, destination_id))
+
+    connection.commit()
+
+    return cursor.rowcount
+
+
+def airport_code_exists_for_other_destination(connection, airport_code, destination_id):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT 1
+        FROM destinations
+        WHERE airport_code = ?
+          AND destination_id != ?
+    """, (airport_code, destination_id))
+
+    return cursor.fetchone() is not None

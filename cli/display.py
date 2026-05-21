@@ -5,7 +5,6 @@ def display_flights(rows):
 
     print()
     print(
-        f"{'ID':<5} "
         f"{'Flight':<10} "
         f"{'Destination':<18} "
         f"{'Country':<22} "
@@ -17,7 +16,6 @@ def display_flights(rows):
 
     for row in rows:
         (
-            flight_id,
             flight_number,
             city,
             country,
@@ -33,7 +31,6 @@ def display_flights(rows):
             pilot_name = f"{pilot_first_name} {pilot_last_name}"
 
         print(
-            f"{flight_id:<5} "
             f"{flight_number:<10} "
             f"{city:<18} "
             f"{country:<22} "
@@ -123,4 +120,26 @@ def display_flight_counts_by_pilot(rows):
         print(
             f"{pilot_name:<25} "
             f"{number_of_flights:<8}"
+        )
+
+def display_flight_selection(rows):
+    if not rows:
+        print("No flights found.")
+        return
+
+    print()
+    print(
+        f"{'ID':<5} "
+        f"{'Flight':<10} "
+        f"{'Departure':<18} "
+        f"{'Status':<12}"
+    )
+    print("-" * 50)
+
+    for flight_id, flight_number, departure_datetime, status in rows:
+        print(
+            f"{flight_id:<5} "
+            f"{flight_number:<10} "
+            f"{departure_datetime:<18} "
+            f"{status:<12}"
         )

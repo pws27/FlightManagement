@@ -2,8 +2,7 @@ import random
 import sqlite3
 import os
 from datetime import datetime, timedelta
-
-DB_NAME = "flight_management.db"
+from constants import DB_NAME, DATETIME_FORMAT, FLIGHT_STATUSES
 
 FIRST_NAMES = [
     "Peter", "Julie", "Hamish", "Terry", "Joy",
@@ -30,14 +29,6 @@ AIRPORTS = [
     ("SYD", "Sydney", "Australia"),
     ("DUB", "Dublin", "Ireland"),
     ("YYZ", "Toronto", "Canada")
-]
-
-FLIGHT_STATUSES = [
-    "Scheduled",
-    "Delayed",
-    "Cancelled",
-    "Boarding",
-    "Departed"
 ]
 
 def initialise_database(reset=False):
@@ -199,7 +190,7 @@ def generate_flight_data(number_of_flights):
             flight_number,
             destination_id,
             pilot_id,
-            departure_datetime.strftime("%Y-%m-%d %H:%M"),
+            departure_datetime.strftime(DATETIME_FORMAT),
             status
         ))
 
