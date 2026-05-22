@@ -1,10 +1,16 @@
+"""
+Unit tests for business rule validation functions.
+
+These tests verify airport code and flight number
+validation rules used throughout the application.
+"""
+
 import unittest
 
 from validators import (
     is_valid_airport_code,
     is_valid_flight_number,
 )
-
 
 class TestValidators(unittest.TestCase):
 
@@ -19,7 +25,7 @@ class TestValidators(unittest.TestCase):
         self.assertFalse(is_valid_airport_code("LH1"))
     
     def test_airport_code_must_be_upper_case(self):
-        self.assertFalse(is_valid_airport_code('lhr'))
+        self.assertFalse(is_valid_airport_code("lhr"))
 
     def test_valid_flight_number(self):
         self.assertTrue(is_valid_flight_number("UOB123"))

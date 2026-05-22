@@ -1,5 +1,15 @@
-def display_flights(rows):
-    if not rows:
+"""
+CLI display and table-formatting functions.
+
+This module is responsible for presenting query results
+in a readable tabular format for the command-line interface.
+"""
+
+def display_flights(flights):
+    """
+    Displays flight information in a formatted table.
+    """
+    if not flights:
         print("No flights found.")
         return
 
@@ -14,7 +24,7 @@ def display_flights(rows):
     )
     print("-" * 115)
 
-    for row in rows:
+    for flight in flights:
         (
             flight_number,
             city,
@@ -23,7 +33,7 @@ def display_flights(rows):
             status,
             pilot_first_name,
             pilot_last_name,
-        ) = row
+        ) = flight
 
         pilot_name = "Unassigned"
 
@@ -39,8 +49,8 @@ def display_flights(rows):
             f"{pilot_name:<25}"
         )
 
-def display_destination_codes(rows):
-    if not rows:
+def display_destination_codes(destinations):
+    if not destinations:
         print("No destinations found.")
         return
 
@@ -52,7 +62,8 @@ def display_destination_codes(rows):
     )
     print("-" * 50)
 
-    for airport_code, city, country, destination_id in rows:
+    for destination in destinations:
+        airport_code, city, country = destination[:3]
         print(
             f"{airport_code:<8} "
             f"{city:<18} "
@@ -60,8 +71,11 @@ def display_destination_codes(rows):
         )
 
 
-def display_pilots(rows):
-    if not rows:
+def display_pilots(pilots):
+    """
+    Displays pilot information in a formatted table.
+    """
+    if not pilots:
         print("No pilots found.")
         return
 
@@ -72,7 +86,7 @@ def display_pilots(rows):
     )
     print("-" * 32)
 
-    for pilot_id, first_name, last_name in rows:
+    for pilot_id, first_name, last_name in pilots:
         pilot_name = f"{first_name} {last_name}"
 
         print(
@@ -81,8 +95,8 @@ def display_pilots(rows):
         )
 
 
-def display_flight_counts_by_destination(rows):
-    if not rows:
+def display_flight_counts_by_destination(destinations):
+    if not destinations:
         print("No destination data found.")
         return
 
@@ -94,7 +108,7 @@ def display_flight_counts_by_destination(rows):
     )
     print("-" * 50)
 
-    for city, country, number_of_flights in rows:
+    for city, country, number_of_flights in destinations:
         print(
             f"{city:<18} "
             f"{country:<22} "
@@ -102,8 +116,8 @@ def display_flight_counts_by_destination(rows):
         )
 
 
-def display_flight_counts_by_pilot(rows):
-    if not rows:
+def display_flight_counts_by_pilot(pilots):
+    if not pilots:
         print("No pilot data found.")
         return
 
@@ -114,7 +128,7 @@ def display_flight_counts_by_pilot(rows):
     )
     print("-" * 35)
 
-    for first_name, last_name, number_of_flights in rows:
+    for first_name, last_name, number_of_flights in pilots:
         pilot_name = f"{first_name} {last_name}"
 
         print(
@@ -122,8 +136,8 @@ def display_flight_counts_by_pilot(rows):
             f"{number_of_flights:<8}"
         )
 
-def display_flight_selection(rows):
-    if not rows:
+def display_flight_selection(flights):
+    if not flights:
         print("No flights found.")
         return
 
@@ -136,10 +150,29 @@ def display_flight_selection(rows):
     )
     print("-" * 50)
 
-    for flight_id, flight_number, departure_datetime, status in rows:
+    for flight_id, flight_number, departure_datetime, status in flights:
         print(
             f"{flight_id:<5} "
             f"{flight_number:<10} "
             f"{departure_datetime:<18} "
             f"{status:<12}"
+        )
+
+
+def display_airport_counts_by_country(countries):
+    if not countries:
+        print("No country data found.")
+        return
+
+    print()
+    print(
+        f"{'Country':<25} "
+        f"{'Airports':<10}"
+    )
+    print("-" * 36)
+
+    for country, number_of_airports in countries:
+        print(
+            f"{country:<25} "
+            f"{number_of_airports:<10}"
         )

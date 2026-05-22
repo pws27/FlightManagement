@@ -1,3 +1,10 @@
+"""
+Database setup and seed data for the flight management system.
+
+This module creates the SQLite schema, opens database connections,
+and inserts sample data used by the CLI application.
+"""
+
 import random
 import sqlite3
 import os
@@ -18,20 +25,40 @@ LAST_NAMES = [
 
 AIRPORTS = [
     ("LHR", "London", "United Kingdom"),
+    ("MAN", "Manchester", "United Kingdom"),
+    ("EDI", "Edinburgh", "United Kingdom"),
     ("JFK", "New York", "United States"),
+    ("LAX", "Los Angeles", "United States"),
+    ("ORD", "Chicago", "United States"),
     ("CDG", "Paris", "France"),
+    ("NCE", "Nice", "France"),
     ("MAD", "Madrid", "Spain"),
+    ("BCN", "Barcelona", "Spain"),
     ("FCO", "Rome", "Italy"),
+    ("MXP", "Milan", "Italy"),
     ("AMS", "Amsterdam", "Netherlands"),
     ("BER", "Berlin", "Germany"),
+    ("MUC", "Munich", "Germany"),
     ("DXB", "Dubai", "United Arab Emirates"),
     ("HND", "Tokyo", "Japan"),
+    ("KIX", "Osaka", "Japan"),
     ("SYD", "Sydney", "Australia"),
+    ("MEL", "Melbourne", "Australia"),
     ("DUB", "Dublin", "Ireland"),
-    ("YYZ", "Toronto", "Canada")
+    ("YYZ", "Toronto", "Canada"),
+    ("YVR", "Vancouver", "Canada"),
+    ("GRU", "Sao Paulo", "Brazil"),
+    ("ARN", "Stockholm", "Sweden"),
+    ("SIN", "Singapore", "Singapore")
 ]
 
 def initialise_database(reset=False):
+    """
+    Creates and seeds the database when needed.
+
+    If reset is True, existing tables are dropped and recreated.
+    Otherwise, the existing database is reused if it already exists.
+    """
     if reset:
         connection = get_connection()
 
@@ -72,10 +99,17 @@ def drop_tables(connection):
 
 
 def create_tables(connection):
+    """
+    Creates the application database schema.
+    """
     connection.execute("""
         CREATE TABLE destinations (
             destination_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            airport_code TEXT UNIQUE NOT NULL,
+            airport_code TEXT UNIQUE NOT NULL     
+                CHECK (
+                length(airport_code) = 3
+                AND airport_code = upper(airport_code)
+            ),
             city TEXT NOT NULL,
             country TEXT NOT NULL
         )
@@ -89,14 +123,20 @@ def create_tables(connection):
         )
     """)
 
-    connection.execute("""
+    status_values = to_sql_text_list(FLIGHT_STATUSES)
+
+    connection.execute(f"""
         CREATE TABLE flights (
             flight_id INTEGER PRIMARY KEY AUTOINCREMENT,
             flight_number TEXT UNIQUE NOT NULL,
             destination_id INTEGER NOT NULL,
             pilot_id INTEGER,
             departure_datetime TEXT NOT NULL,
-            status TEXT NOT NULL,
+
+            status TEXT NOT NULL
+                CHECK (
+                    status IN ({status_values})
+                ),
 
             FOREIGN KEY (destination_id)
                 REFERENCES destinations(destination_id),
@@ -110,7 +150,12 @@ def create_tables(connection):
 
 
 def seed_data(connection):
-    random.seed(42)
+    """
+    Seeds the database with sample destinations,
+    pilots, and flights.
+    """
+
+    random.seed(42) # comment out for non-deterministic data...
 
     seed_destinations(connection)
     seed_pilots(connection, 12)
@@ -195,3 +240,10 @@ def generate_flight_data(number_of_flights):
         ))
 
     return flights
+
+
+def to_sql_text_list(values):
+    return ", ".join(
+        f"'{value}'"
+        for value in values
+    )

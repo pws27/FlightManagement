@@ -1,3 +1,11 @@
+"""
+Reusable CLI input prompts and validation loops.
+
+This module handles menu navigation, user selections,
+date parsing, and validation of business rules such as
+airport codes and flight numbers.
+"""
+
 from datetime import datetime
 from constants import DATE_FORMAT, DATETIME_FORMAT
 
@@ -6,9 +14,9 @@ from validators import (
     is_valid_flight_number,
 )
 
-def prompt_for_selection(prompt, rows, display_function):
-    display_function(rows)
-    if not rows:
+def prompt_for_selection(prompt, options, display_function):
+    display_function(options)
+    if not options:
         return None
 
     while True:
@@ -20,9 +28,9 @@ def prompt_for_selection(prompt, rows, display_function):
             print("Please enter a valid number.")
             continue
 
-        for row in rows:
-            if row[0] == selected_id:
-                return row
+        for option in options:
+            if option[0] == selected_id:
+                return option
 
         print("Invalid selection. Please try again.")
 
@@ -48,26 +56,26 @@ def prompt_for_value_from_list(prompt, values):
             print("Invalid selection. Please try again.")
 
 
-def prompt_for_code_selection(prompt, rows, display_function):
-    display_function(rows)
-    if not rows:
+def prompt_for_code_selection(prompt, options, display_function):
+    display_function(options)
+    if not options:
         return None
 
     while True:
         choice = input(f"{prompt}: ").strip().upper()
 
-        for row in rows:
-            if row[0] == choice:
-                return row
+        for option in options:
+            if option[0] == choice:
+                return option
 
         print("Invalid selection. Please try again.")
 
 
-def prompt_for_optional_code_selection(prompt, rows, display_function):
+def prompt_for_optional_code_selection(prompt, options, display_function):
     print("ANY - Any destination")
-    display_function(rows)
+    display_function(options)
     
-    if not rows:
+    if not options:
         return None
     
     while True:
@@ -77,38 +85,59 @@ def prompt_for_optional_code_selection(prompt, rows, display_function):
         if choice == "ANY":
             return None
 
-        for row in rows:
-            if row[0] == choice:
-                return row
+        for option in options:
+            if option[0] == choice:
+                return option
 
         print("Invalid selection. Please try again.")
 
 
-def prompt_for_menu_selection(options):
+def prompt_for_menu_selection(groups):
+    """
+    Displays a grouped CLI menu and returns
+    the selected action.
+    """
     while True:
+        numbered_options = [
+            (description, action)
+            for _, options in groups
+            for description, action in options
+        ]
+
+        number_width = len(str(len(numbered_options) + 1))
+
         print("\nFlight Management System\n")
 
-        for index, (description, _) in enumerate(options, start=1):
-            print(f"{index}. {description}")
+        current_number = 1
 
-        print(f"{len(options) + 1}. Exit")
+        for title, options in groups:
+            print(title)
+
+            for description, action in options:
+                print(f"{current_number:>{number_width}}. {description}")
+                current_number += 1
+
+            print()
+
+        print(f"{len(numbered_options) + 1:>{number_width}}. Exit")
         print()
 
         choice = input("Choose an option: ").strip()
 
         try:
             selected_index = int(choice) - 1
-
-            if selected_index == len(options):
-                return None
-
-            if selected_index < 0 or selected_index >= len(options):
-                raise IndexError
-
-            return options[selected_index][1]
-
-        except (ValueError, IndexError):
+        except ValueError:
             print("Invalid option. Please choose again.")
+            continue
+
+        if selected_index == len(numbered_options):
+            return None
+
+        if selected_index < 0 or selected_index >= len(numbered_options):
+            print("Invalid option. Please choose again.")
+            continue
+
+        return numbered_options[selected_index][1]
 
 
 def prompt_for_required_text(prompt):
@@ -122,6 +151,10 @@ def prompt_for_required_text(prompt):
 
 
 def prompt_for_datetime(prompt):
+    """
+    Prompts the user for a date and time in
+    YYYY-MM-DD HH:MM format.
+    """
     while True:
         value = input(f"{prompt} YYYY-MM-DD HH:MM: ").strip()
 
@@ -146,6 +179,10 @@ def prompt_for_optional_date(prompt):
             print("Invalid date format. Please use YYYY-MM-DD.")
 
 def prompt_for_airport_code(prompt):
+    """
+    Prompts the user for a valid three-letter
+    airport code.
+    """
     while True:
         value = input(f"{prompt}: ").strip().upper()
 
@@ -156,6 +193,10 @@ def prompt_for_airport_code(prompt):
 
 
 def prompt_for_flight_number(prompt):
+    """
+    Prompts the user for a valid flight number
+    beginning with the UOB prefix.
+    """
     while True:
         value = input(f"{prompt}: ").strip().upper()
 
@@ -166,3 +207,7 @@ def prompt_for_flight_number(prompt):
             "Flight number must start with "
             "'UOB' followed by digits."
         )
+
+
+def pause():
+    input("\nPress Enter to continue...")

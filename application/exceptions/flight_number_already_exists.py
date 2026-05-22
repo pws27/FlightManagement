@@ -1,0 +1,2 @@
+class FlightNumberAlreadyExists(Exception):
+    pass

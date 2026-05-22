@@ -1,3 +1,10 @@
+"""
+Application entry point for the flight management system.
+
+This module initialises the database, opens the SQLite
+connection, and starts the CLI application loop.
+"""
+
 import sys
 
 from cli.app import run_cli
@@ -19,6 +26,6 @@ def main():
     finally:
         connection.close()
 
-
 if __name__ == "__main__":
     main()
+    

@@ -1,3 +1,5 @@
 # FlightManagement
 
-`python -m unittest -v`
+`python main.py [--reset]`
+
+`python -m unittest`

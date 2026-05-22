@@ -1,3 +1,10 @@
+"""
+Unit tests for reusable CLI prompt functions.
+
+These tests verify menu selection, user input handling,
+validation retries, and date parsing behaviour.
+"""
+
 import unittest
 from unittest.mock import patch
 
@@ -103,8 +110,13 @@ class TestPrompts(unittest.TestCase):
             pass
 
         action = prompt_for_menu_selection([
-            ("First", first_action),
-            ("Second", second_action),
+            (
+                "Test group",
+                [
+                    ("First", first_action),
+                    ("Second", second_action),
+                ],
+            ),
         ])
 
         self.assertEqual(action, second_action)
@@ -119,50 +131,55 @@ class TestPrompts(unittest.TestCase):
             pass
 
         action = prompt_for_menu_selection([
-            ("First", first_action),
-            ("Second", second_action),
+            (
+                "Test group",
+                [
+                    ("First", first_action),
+                    ("Second", second_action),
+                ],
+            ),
         ])
 
         self.assertIsNone(action)
 
 
     @patch("builtins.input", return_value="2")
-    def test_prompt_for_selection_returns_matching_row(self, mock_input):
-        rows = [
+    def test_prompt_for_selection_returns_matching_option(self, mock_input):
+        options = [
             (1, "Peter", "Somerville"),
             (2, "Julie", "Amphlett"),
         ]
 
         selected = prompt_for_selection(
             "Choose pilot ID",
-            rows,
-            lambda rows: None,
+            options,
+            lambda options: None,
         )
 
         self.assertEqual(selected, (2, "Julie", "Amphlett"))
 
 
-    def test_prompt_for_selection_returns_none_when_no_rows(self):
+    def test_prompt_for_selection_returns_none_when_no_options(self):
         selected = prompt_for_selection(
             "Choose pilot ID",
             [],
-            lambda rows: None,
+            lambda options: None,
         )
 
         self.assertIsNone(selected)
 
 
     @patch("builtins.input", return_value="lhr")
-    def test_prompt_for_code_selection_returns_matching_row_case_insensitive(self, mock_input):
-        rows = [
+    def test_prompt_for_code_selection_returns_matching_option_case_insensitive(self, mock_input):
+        options = [
             ("LHR", "London", "United Kingdom", 1),
             ("JFK", "New York", "United States", 2),
         ]
 
         selected = prompt_for_code_selection(
             "Choose destination airport code",
-            rows,
-            lambda rows: None,
+            options,
+            lambda options: None,
         )
 
         self.assertEqual(selected, ("LHR", "London", "United Kingdom", 1))
