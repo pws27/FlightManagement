@@ -14,6 +14,7 @@ from validators import (
     is_valid_flight_number,
 )
 
+
 def prompt_for_selection(prompt, options, display_function):
     display_function(options)
     if not options:
@@ -36,6 +37,10 @@ def prompt_for_selection(prompt, options, display_function):
 
 
 def prompt_for_value_from_list(prompt, values):
+    """
+    Prompts the user to choose a value from a numbered list.
+    """
+
     while True:
         print()
 
@@ -72,12 +77,17 @@ def prompt_for_code_selection(prompt, options, display_function):
 
 
 def prompt_for_optional_code_selection(prompt, options, display_function):
+    """
+    Prompts the user to select an airport code or choose ANY
+    to disable destination filtering.
+    """
+
     print("ANY - Any destination")
     display_function(options)
-    
+
     if not options:
         return None
-    
+
     while True:
 
         choice = input(f"{prompt}: ").strip().upper()
@@ -97,6 +107,7 @@ def prompt_for_menu_selection(groups):
     Displays a grouped CLI menu and returns
     the selected action.
     """
+
     while True:
         numbered_options = [
             (description, action)
@@ -155,6 +166,7 @@ def prompt_for_datetime(prompt):
     Prompts the user for a date and time in
     YYYY-MM-DD HH:MM format.
     """
+
     while True:
         value = input(f"{prompt} YYYY-MM-DD HH:MM: ").strip()
 
@@ -166,6 +178,11 @@ def prompt_for_datetime(prompt):
 
 
 def prompt_for_optional_date(prompt):
+    """
+    Prompts the user for an optional date filter in YYYY-MM-DD format.
+    Blank input disables date filtering.
+    """
+
     while True:
         value = input(f"{prompt}: ").strip()
 
@@ -177,6 +194,7 @@ def prompt_for_optional_date(prompt):
             return value
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
+
 
 def prompt_for_airport_code(prompt):
     """
@@ -203,11 +221,11 @@ def prompt_for_flight_number(prompt):
         if is_valid_flight_number(value):
             return value
 
-        print(
-            "Flight number must start with "
-            "'UOB' followed by digits."
-        )
+        print("Flight number must start with 'UOB' followed by digits.")
 
 
 def pause():
+    """
+    Pauses CLI execution until the user presses Enter.
+    """
     input("\nPress Enter to continue...")

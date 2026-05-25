@@ -17,7 +17,7 @@ from database import (
 def main():
     reset = "--reset" in sys.argv
 
-    initialise_database(reset=reset)
+    initialise_database(reset)
 
     connection = get_connection()
 
@@ -26,6 +26,6 @@ def main():
     finally:
         connection.close()
 
+
 if __name__ == "__main__":
     main()
-    

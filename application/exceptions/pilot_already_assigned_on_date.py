@@ -1,0 +1,2 @@
+class PilotAlreadyAssignedOnDate(Exception):
+    pass

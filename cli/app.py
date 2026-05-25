@@ -15,6 +15,8 @@ from cli.prompts import (
     pause,
 )
 
+from cli.screen import clear_screen
+
 MENU_GROUPS = [
     (
         "Main Menu",
@@ -27,17 +29,18 @@ MENU_GROUPS = [
     ),
 ]
 
+
 def run_cli(connection):
     while True:
+        clear_screen()
         action = prompt_for_menu_selection(MENU_GROUPS)
 
         if action is None:
             print("Goodbye.")
             break
 
-        print()
-        
+        clear_screen()
+
         action(connection)
 
         pause()
-        

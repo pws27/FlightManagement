@@ -20,47 +20,45 @@ class DatabaseTestCase(unittest.TestCase):
         self.connection.execute("PRAGMA foreign_keys = ON")
         create_tables(self.connection)
 
-
     def tearDown(self):
         self.connection.close()
-
 
     def seed_test_destination(self):
         return add_destination(
             self.connection,
-            "LHR",
-            "London",
-            "United Kingdom",
+            airport_code="LHR",
+            city="London",
+            country="United Kingdom",
         )
-    
 
     def seed_test_flight(self):
         destination_id = self.seed_test_destination()
 
         return add_flight(
             self.connection,
-            "UOB100",
-            destination_id,
-            "2026-06-01 10:00",
-            "Scheduled",
+            flight_number="UOB100",
+            destination_id=destination_id,
+            departure_datetime="2026-06-01 10:00",
+            status="Scheduled",
         )
-
 
     def seed_test_pilot(self):
         cursor = self.connection.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO pilots (
                 first_name,
                 last_name
             )
             VALUES (?, ?)
-        """, (
-            "Peter",
-            "Somerville",
-        ))
+        """,
+            (
+                "John",
+                "Smith",
+            ),
+        )
 
         self.connection.commit()
 
         return cursor.lastrowid
-    

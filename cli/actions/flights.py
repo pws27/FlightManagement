@@ -1,14 +1,20 @@
 """
 CLI actions related to flight management.
 
-This module coordinates user input, repository queries,
-and display functions for creating, searching, updating,
-and deleting flights.
+This module handles user interaction for listing, searching,
+creating, updating, assigning pilots to, and deleting flights.
+Business operations are delegated to the application layer.
 """
 
 from application.exceptions.flight_number_already_exists import (
     FlightNumberAlreadyExists,
 )
+
+from application.exceptions.pilot_already_assigned_on_date import (
+    PilotAlreadyAssignedOnDate,
+)
+
+from application.destinations import list_destinations_for_selection
 
 from application.flights import (
     assign_pilot_to_existing_flight,
@@ -20,31 +26,31 @@ from application.flights import (
     list_flights_for_selection,
     remove_flight,
     search_flights,
+    unassign_pilot_from_existing_flight,
 )
 
+from application.pilots import list_pilots
+
 from cli.display import (
-    display_destination_codes, 
-    display_flight_selection, 
-    display_flights, 
+    display_destination_codes,
+    display_flight_selection,
+    display_flights,
     display_pilots,
 )
 
 from cli.prompts import (
-    prompt_for_code_selection, 
-    prompt_for_datetime, 
-    prompt_for_flight_number, 
+    prompt_for_code_selection,
+    prompt_for_datetime,
+    prompt_for_flight_number,
     prompt_for_menu_selection,
-    prompt_for_optional_code_selection, 
-    prompt_for_optional_date, 
-    prompt_for_selection, 
+    prompt_for_optional_code_selection,
+    prompt_for_optional_date,
+    prompt_for_selection,
     prompt_for_value_from_list,
 )
 
+from cli.screen import clear_screen
 from constants import FLIGHT_STATUSES
-
-from application.destinations import list_destinations_for_selection
-
-from application.pilots import list_pilots
 
 
 def view_all_flights_action(connection):
@@ -72,10 +78,14 @@ def search_flights_action(connection):
 
     flights = search_flights(
         connection,
-        destination_id=destination_id,
-        status=status,
-        departure_date=departure_date,
+        destination_id,
+        status,
+        departure_date,
     )
+
+    clear_screen()
+
+    print("Flight Search Results")
 
     display_flights(flights)
 
@@ -86,6 +96,8 @@ def add_flight_action(connection):
     flight_number = prompt_for_flight_number("Flight number")
 
     try:
+        # Fail fast before collecting the rest of the flight details.
+        # create_flight also validates this so non-CLI callers are protected.
         ensure_flight_number_is_available(connection, flight_number)
     except FlightNumberAlreadyExists:
         print("That flight number already exists.")
@@ -131,17 +143,20 @@ def add_flight_action(connection):
     try:
         create_flight(
             connection,
-            flight_number=flight_number,
-            destination_id=destination_id,
-            departure_datetime=departure_datetime,
-            status=status,
-            pilot_id=pilot_id,
+            flight_number,
+            destination_id,
+            departure_datetime,
+            status,
+            pilot_id,
         )
 
         print("Flight added successfully.")
 
     except FlightNumberAlreadyExists:
         print("That flight number already exists.")
+
+    except PilotAlreadyAssignedOnDate:
+        print("That pilot is already assigned to another flight on this date.")
 
     except Exception as error:
         connection.rollback()
@@ -178,9 +193,7 @@ def update_flight_information_action(connection):
             success = change_flight_status(connection, flight_id, status)
 
         else:
-            departure_datetime = prompt_for_datetime(
-                "New departure datetime"
-            )
+            departure_datetime = prompt_for_datetime("New departure datetime")
 
             success = change_flight_departure_datetime(
                 connection,
@@ -231,11 +244,17 @@ def delete_flight_action(connection):
         connection.rollback()
         print(f"Could not delete flight: {error}")
 
+
 def flights_menu_action(connection):
+
+    clear_screen()
+
     action = prompt_for_menu_selection(FLIGHT_GROUPS)
 
     if action is None:
         return
+
+    clear_screen()
 
     action(connection)
 
@@ -275,9 +294,41 @@ def assign_pilot_to_flight_action(connection):
         else:
             print("Flight could not be found.")
 
+    except PilotAlreadyAssignedOnDate:
+        print("That pilot is already assigned to another flight on this date.")
+
     except Exception as error:
         connection.rollback()
         print(f"Could not assign pilot: {error}")
+
+
+def unassign_pilot_from_flight_action(connection):
+    flight = prompt_for_selection(
+        "Choose flight ID",
+        list_flights_for_selection(connection),
+        display_flight_selection,
+    )
+
+    if flight is None:
+        return
+
+    flight_id = flight[0]
+
+    try:
+        success = unassign_pilot_from_existing_flight(
+            connection,
+            flight_id,
+        )
+
+        if success:
+            print("Pilot unassigned successfully.")
+        else:
+            print("Flight could not be found.")
+
+    except Exception as error:
+        connection.rollback()
+        print(f"Could not unassign pilot: {error}")
+
 
 FLIGHT_GROUPS = [
     (
@@ -288,6 +339,7 @@ FLIGHT_GROUPS = [
             ("Add", add_flight_action),
             ("Update", update_flight_information_action),
             ("Assign pilot", assign_pilot_to_flight_action),
+            ("Unassign pilot", unassign_pilot_from_flight_action),
             ("Delete", delete_flight_action),
         ],
     ),

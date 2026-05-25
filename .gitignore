@@ -2,5 +2,3 @@ __pycache__/
 tests/__pycache__
 *.pyc
 .DS_Store
-source.txt
-tests.txt

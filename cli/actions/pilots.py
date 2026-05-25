@@ -1,8 +1,9 @@
 """
 CLI actions related to pilot management.
 
-This module handles pilot creation, pilot assignment
-to flights, and viewing pilot schedules.
+This module handles user interaction for creating, updating,
+listing pilots, and viewing pilot schedules.
+Business operations are delegated to the application layer.
 """
 
 from application.pilots import (
@@ -11,10 +12,11 @@ from application.pilots import (
     create_pilot,
     get_pilot_schedule,
     list_pilots,
+    remove_pilot,
 )
 
 from cli.display import (
-    display_flights, 
+    display_flights,
     display_pilots,
 )
 
@@ -24,6 +26,7 @@ from cli.prompts import (
     prompt_for_value_from_list,
     prompt_for_menu_selection,
 )
+from cli.screen import clear_screen
 
 
 def view_pilot_schedule_action(connection):
@@ -39,6 +42,10 @@ def view_pilot_schedule_action(connection):
     pilot_id = pilot[0]
 
     flights = get_pilot_schedule(connection, pilot_id)
+
+    clear_screen()
+
+    print("Pilot Schedule")
 
     display_flights(flights)
 
@@ -102,11 +109,48 @@ def update_pilot_action(connection):
         print(f"Could not update pilot: {error}")
 
 
+def delete_pilot_action(connection):
+    pilot = prompt_for_selection(
+        "Choose pilot ID to delete",
+        list_pilots(connection),
+        display_pilots,
+    )
+
+    if pilot is None:
+        return
+
+    confirm = prompt_for_value_from_list(
+        "Are you sure you want to delete this pilot?",
+        ["No", "Yes"],
+    )
+
+    if confirm == "No":
+        print("Delete cancelled.")
+        return
+
+    try:
+        success = remove_pilot(connection, pilot[0])
+
+        if success:
+            print("Pilot deleted successfully.")
+        else:
+            print("Pilot could not be found.")
+
+    except Exception as error:
+        connection.rollback()
+        print(f"Could not delete pilot: {error}")
+
+
 def pilots_menu_action(connection):
+
+    clear_screen()
+
     action = prompt_for_menu_selection(PILOT_GROUPS)
 
     if action is None:
         return
+
+    clear_screen()
 
     action(connection)
 
@@ -119,6 +163,7 @@ PILOT_GROUPS = [
             ("Add", add_pilot_action),
             ("Update", update_pilot_action),
             ("View schedule", view_pilot_schedule_action),
+            ("Delete", delete_pilot_action),
         ],
     ),
 ]
