@@ -11,11 +11,11 @@ from repositories.destinations import add_destination
 from repositories.flights import (
     add_flight,
     assign_pilot_to_flight,
-    delete_flight,
     flight_number_exists,
     get_all_flight_details,
     get_all_flights_for_selection,
     find_flights,
+    get_cancellable_flights,
     pilot_has_flight_on_departure_date,
     unassign_pilot_from_flight,
     update_flight_departure_datetime,
@@ -148,35 +148,6 @@ class TestFlightRepository(DatabaseTestCase):
 
         self.assertEqual(updated_rows, 1)
         self.assertIsNone(flight[0])
-
-    def test_delete_flight_deletes_flight(self):
-        flight_id = self.seed_test_flight()
-
-        updated_rows = delete_flight(
-            self.connection,
-            flight_id,
-        )
-
-        cursor = self.connection.cursor()
-
-        cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM flights
-            WHERE flight_id = ?
-        """,
-            (flight_id,),
-        )
-
-        flight = cursor.fetchone()
-
-        self.assertEqual(updated_rows, 1)
-        self.assertEqual(flight[0], 0)
-
-    def test_delete_flight_returns_zero_for_missing_flight(self):
-        updated_rows = delete_flight(self.connection, 999)
-
-        self.assertEqual(updated_rows, 0)
 
     def test_find_flights_filters_by_destination_id(self):
         london_destination_id = self.seed_test_destination()
@@ -517,3 +488,28 @@ class TestFlightRepository(DatabaseTestCase):
                 ),
             ],
         )
+
+    def test_get_cancellable_flights_excludes_cancelled_flights(self):
+        destination_id = self.seed_test_destination()
+
+        active_flight_id = add_flight(
+            self.connection,
+            flight_number="UOB100",
+            destination_id=destination_id,
+            departure_datetime="2026-06-01 10:00",
+            status="Scheduled",
+        )
+
+        add_flight(
+            self.connection,
+            flight_number="UOB200",
+            destination_id=destination_id,
+            departure_datetime="2026-06-01 12:00",
+            status="Cancelled",
+        )
+
+        flights = get_cancellable_flights(self.connection)
+
+        self.assertEqual(len(flights), 1)
+        self.assertEqual(flights[0][0], active_flight_id)
+        self.assertEqual(flights[0][1], "UOB100")

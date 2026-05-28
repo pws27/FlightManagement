@@ -133,8 +133,6 @@ def add_flight(
         ),
     )
 
-    connection.commit()
-
     return cursor.lastrowid
 
 
@@ -191,6 +189,23 @@ def get_all_flights_for_selection(connection):
     return cursor.fetchall()
 
 
+def get_cancellable_flights(connection):
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            flight_id,
+            flight_number,
+            departure_datetime,
+            status
+        FROM flights
+        WHERE status != 'Cancelled'
+        ORDER BY departure_datetime
+        """)
+
+    return cursor.fetchall()
+
+
 def update_flight_status(connection, flight_id, status):
     cursor = connection.cursor()
 
@@ -202,8 +217,6 @@ def update_flight_status(connection, flight_id, status):
     """,
         (status, flight_id),
     )
-
-    connection.commit()
 
     return cursor.rowcount
 
@@ -220,24 +233,6 @@ def update_flight_departure_datetime(connection, flight_id, departure_datetime):
         (departure_datetime, flight_id),
     )
 
-    connection.commit()
-
-    return cursor.rowcount
-
-
-def delete_flight(connection, flight_id):
-    cursor = connection.cursor()
-
-    cursor.execute(
-        """
-        DELETE FROM flights
-        WHERE flight_id = ?
-    """,
-        (flight_id,),
-    )
-
-    connection.commit()
-
     return cursor.rowcount
 
 
@@ -253,8 +248,6 @@ def assign_pilot_to_flight(connection, flight_id, pilot_id):
         (pilot_id, flight_id),
     )
 
-    connection.commit()
-
     return cursor.rowcount
 
 
@@ -269,8 +262,6 @@ def unassign_pilot_from_flight(connection, flight_id):
     """,
         (flight_id,),
     )
-
-    connection.commit()
 
     return cursor.rowcount
 

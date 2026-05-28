@@ -29,8 +29,6 @@ def add_destination(connection, airport_code, city, country):
         ),
     )
 
-    connection.commit()
-
     return cursor.lastrowid
 
 
@@ -88,8 +86,6 @@ def update_destination_airport_code(connection, destination_id, airport_code):
         (airport_code, destination_id),
     )
 
-    connection.commit()
-
     return cursor.rowcount
 
 
@@ -105,8 +101,6 @@ def update_destination_city(connection, destination_id, city):
         (city, destination_id),
     )
 
-    connection.commit()
-
     return cursor.rowcount
 
 
@@ -121,8 +115,6 @@ def update_destination_country(connection, destination_id, country):
     """,
         (country, destination_id),
     )
-
-    connection.commit()
 
     return cursor.rowcount
 

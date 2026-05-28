@@ -45,8 +45,6 @@ def add_pilot(connection, first_name, last_name):
         ),
     )
 
-    connection.commit()
-
     return cursor.lastrowid
 
 
@@ -62,8 +60,6 @@ def update_pilot_first_name(connection, pilot_id, first_name):
         (first_name, pilot_id),
     )
 
-    connection.commit()
-
     return cursor.rowcount
 
 
@@ -78,8 +74,6 @@ def update_pilot_last_name(connection, pilot_id, last_name):
     """,
         (last_name, pilot_id),
     )
-
-    connection.commit()
 
     return cursor.rowcount
 
@@ -101,7 +95,5 @@ def delete_pilot(connection, pilot_id):
         """,
         (pilot_id,),
     )
-
-    connection.commit()
 
     return cursor.rowcount

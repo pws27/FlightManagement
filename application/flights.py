@@ -24,10 +24,10 @@ from constants import DATE_FORMAT, DATETIME_FORMAT
 from repositories.flights import (
     add_flight,
     assign_pilot_to_flight,
-    delete_flight,
     flight_number_exists,
     get_all_flight_details,
     get_all_flights_for_selection,
+    get_cancellable_flights,
     get_flight_departure_datetime,
     find_flights,
     pilot_has_flight_on_departure_date,
@@ -45,22 +45,31 @@ def create_flight(
     status,
     pilot_id=None,
 ):
-    ensure_flight_number_is_available(connection, flight_number)
+    try:
+        ensure_flight_number_is_available(connection, flight_number)
 
-    ensure_pilot_is_available_for_flight_date(
-        connection,
-        pilot_id,
-        departure_datetime,
-    )
+        ensure_pilot_is_available_for_flight_date(
+            connection,
+            pilot_id,
+            departure_datetime,
+        )
 
-    return add_flight(
-        connection,
-        flight_number,
-        destination_id,
-        departure_datetime,
-        status,
-        pilot_id,
-    )
+        flight_id = add_flight(
+            connection,
+            flight_number,
+            destination_id,
+            departure_datetime,
+            status,
+            pilot_id,
+        )
+
+        connection.commit()
+
+        return flight_id
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def search_flights(
@@ -95,38 +104,105 @@ def list_flights_for_selection(connection):
     return get_all_flights_for_selection(connection)
 
 
+def list_flights_for_cancellation(connection):
+    return get_cancellable_flights(connection)
+
+
+def cancel_flight(connection, flight_id):
+    try:
+        status_updated = (
+            update_flight_status(
+                connection,
+                flight_id,
+                "Cancelled",
+            )
+            == 1
+        )
+
+        if not status_updated:
+            connection.rollback()
+            return False
+
+        unassign_pilot_from_flight(connection, flight_id)
+
+        connection.commit()
+
+        return True
+
+    except Exception:
+        connection.rollback()
+        raise
+
+
 def change_flight_status(connection, flight_id, status):
-    return update_flight_status(connection, flight_id, status) == 1
+    try:
+        success = update_flight_status(connection, flight_id, status) == 1
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_flight_departure_datetime(connection, flight_id, departure_datetime):
-    return (
-        update_flight_departure_datetime(connection, flight_id, departure_datetime) == 1
-    )
+    try:
+        success = (
+            update_flight_departure_datetime(
+                connection,
+                flight_id,
+                departure_datetime,
+            )
+            == 1
+        )
 
+        connection.commit()
 
-def remove_flight(connection, flight_id):
-    return delete_flight(connection, flight_id) == 1
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def assign_pilot_to_existing_flight(connection, flight_id, pilot_id):
-    departure_datetime = get_flight_departure_datetime(connection, flight_id)
+    try:
+        departure_datetime = get_flight_departure_datetime(connection, flight_id)
 
-    if departure_datetime is None:
-        return False
+        if departure_datetime is None:
+            return False
 
-    ensure_pilot_is_available_for_flight_date(
-        connection,
-        pilot_id,
-        departure_datetime,
-        exclude_flight_id=flight_id,
-    )
+        ensure_pilot_is_available_for_flight_date(
+            connection,
+            pilot_id,
+            departure_datetime,
+            exclude_flight_id=flight_id,
+        )
 
-    return assign_pilot_to_flight(connection, flight_id, pilot_id) == 1
+        success = assign_pilot_to_flight(connection, flight_id, pilot_id) == 1
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def unassign_pilot_from_existing_flight(connection, flight_id):
-    return unassign_pilot_from_flight(connection, flight_id) == 1
+    try:
+        success = unassign_pilot_from_flight(connection, flight_id) == 1
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def ensure_flight_number_is_available(connection, flight_number):

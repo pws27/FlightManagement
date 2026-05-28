@@ -18,13 +18,14 @@ from application.destinations import list_destinations_for_selection
 
 from application.flights import (
     assign_pilot_to_existing_flight,
+    cancel_flight,
     change_flight_departure_datetime,
     change_flight_status,
     create_flight,
     ensure_flight_number_is_available,
     list_flights,
+    list_flights_for_cancellation,
     list_flights_for_selection,
-    remove_flight,
     search_flights,
     unassign_pilot_from_existing_flight,
 )
@@ -159,7 +160,6 @@ def add_flight_action(connection):
         print("That pilot is already assigned to another flight on this date.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not add flight: {error}")
 
 
@@ -207,42 +207,7 @@ def update_flight_information_action(connection):
             print("Flight could not be found.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not update flight: {error}")
-
-
-def delete_flight_action(connection):
-    flight = prompt_for_selection(
-        "Choose flight ID to delete",
-        list_flights_for_selection(connection),
-        display_flight_selection,
-    )
-
-    if flight is None:
-        return
-
-    flight_id = flight[0]
-
-    confirm = prompt_for_value_from_list(
-        "Are you sure you want to delete this flight?",
-        ["No", "Yes"],
-    )
-
-    if confirm == "No":
-        print("Delete cancelled.")
-        return
-
-    try:
-        success = remove_flight(connection, flight_id)
-
-        if success:
-            print("Flight deleted successfully.")
-        else:
-            print("Flight could not be found.")
-
-    except Exception as error:
-        connection.rollback()
-        print(f"Could not delete flight: {error}")
 
 
 def flights_menu_action(connection):
@@ -298,7 +263,6 @@ def assign_pilot_to_flight_action(connection):
         print("That pilot is already assigned to another flight on this date.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not assign pilot: {error}")
 
 
@@ -326,8 +290,38 @@ def unassign_pilot_from_flight_action(connection):
             print("Flight could not be found.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not unassign pilot: {error}")
+
+
+def cancel_flight_action(connection):
+    flight = prompt_for_selection(
+        "Choose flight ID to cancel",
+        list_flights_for_cancellation(connection),
+        display_flight_selection,
+    )
+
+    if flight is None:
+        return
+
+    confirm = prompt_for_value_from_list(
+        "Are you sure you want to cancel this flight?",
+        ["No", "Yes"],
+    )
+
+    if confirm == "No":
+        print("Cancellation aborted.")
+        return
+
+    try:
+        success = cancel_flight(connection, flight[0])
+
+        if success:
+            print("Flight cancelled successfully.")
+        else:
+            print("Flight could not be found.")
+
+    except Exception as error:
+        print(f"Could not cancel flight: {error}")
 
 
 FLIGHT_GROUPS = [
@@ -337,10 +331,10 @@ FLIGHT_GROUPS = [
             ("List", view_all_flights_action),
             ("Search", search_flights_action),
             ("Add", add_flight_action),
+            ("Cancel", cancel_flight_action),
             ("Update", update_flight_information_action),
             ("Assign pilot", assign_pilot_to_flight_action),
             ("Unassign pilot", unassign_pilot_from_flight_action),
-            ("Delete", delete_flight_action),
         ],
     ),
 ]

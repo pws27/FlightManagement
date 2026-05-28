@@ -62,7 +62,6 @@ def add_pilot_action(connection):
         print("Pilot added successfully.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not add pilot: {error}")
 
 
@@ -105,7 +104,6 @@ def update_pilot_action(connection):
             print("Pilot could not be found.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not update pilot: {error}")
 
 
@@ -137,7 +135,6 @@ def delete_pilot_action(connection):
             print("Pilot could not be found.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not delete pilot: {error}")
 
 

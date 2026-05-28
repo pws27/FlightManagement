@@ -18,13 +18,14 @@ from application.exceptions.pilot_already_assigned_on_date import (
 
 from application.flights import (
     assign_pilot_to_existing_flight,
+    cancel_flight,
     change_flight_departure_datetime,
     change_flight_status,
     create_flight,
     get_departure_datetime_range,
     list_flights,
+    list_flights_for_cancellation,
     list_flights_for_selection,
-    remove_flight,
     search_flights,
     unassign_pilot_from_existing_flight,
 )
@@ -112,18 +113,53 @@ class TestFlightApplication(DatabaseTestCase):
 
         self.assertFalse(success)
 
-    def test_remove_flight_returns_true_when_flight_exists(self):
+    def test_cancel_flight_sets_status_to_cancelled(self):
         flight_id = self.seed_test_flight()
 
-        success = remove_flight(self.connection, flight_id)
+        success = cancel_flight(self.connection, flight_id)
 
         self.assertTrue(success)
 
-    def test_remove_flight_returns_false_when_flight_missing(self):
-        success = remove_flight(
-            self.connection,
-            flight_id=999,
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            SELECT status
+            FROM flights
+            WHERE flight_id = ?
+            """,
+            (flight_id,),
         )
+
+        self.assertEqual(cursor.fetchone()[0], "Cancelled")
+
+    def test_cancel_flight_unassigns_pilot(self):
+        flight_id = self.seed_test_flight()
+        pilot_id = self.seed_test_pilot()
+
+        assign_pilot_to_existing_flight(
+            self.connection,
+            flight_id,
+            pilot_id,
+        )
+
+        success = cancel_flight(self.connection, flight_id)
+
+        self.assertTrue(success)
+
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            SELECT pilot_id
+            FROM flights
+            WHERE flight_id = ?
+            """,
+            (flight_id,),
+        )
+
+        self.assertIsNone(cursor.fetchone()[0])
+
+    def test_cancel_flight_returns_false_when_flight_missing(self):
+        success = cancel_flight(self.connection, flight_id=999)
 
         self.assertFalse(success)
 
@@ -334,3 +370,27 @@ class TestFlightApplication(DatabaseTestCase):
                 second_flight_id,
                 pilot_id,
             )
+
+    def test_list_cancellable_flights_for_selection_excludes_cancelled_flights(self):
+        destination_id = self.seed_test_destination()
+
+        create_flight(
+            self.connection,
+            flight_number="UOB200",
+            destination_id=destination_id,
+            departure_datetime="2026-06-01 10:00",
+            status="Scheduled",
+        )
+
+        create_flight(
+            self.connection,
+            flight_number="UOB201",
+            destination_id=destination_id,
+            departure_datetime="2026-06-01 12:00",
+            status="Cancelled",
+        )
+
+        flights = list_flights_for_cancellation(self.connection)
+
+        self.assertEqual(len(flights), 1)
+        self.assertEqual(flights[0][1], "UOB200")

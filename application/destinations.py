@@ -38,29 +38,77 @@ def ensure_airport_code_is_available(
 
 
 def create_destination(connection, airport_code, city, country):
-    ensure_airport_code_is_available(connection, airport_code)
+    try:
+        ensure_airport_code_is_available(connection, airport_code)
 
-    return add_destination(connection, airport_code, city, country)
+        destination_id = add_destination(connection, airport_code, city, country)
+
+        connection.commit()
+
+        return destination_id
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_destination_airport_code(connection, destination_id, airport_code):
-    ensure_airport_code_is_available(
-        connection,
-        airport_code,
-        exclude_destination_id=destination_id,
-    )
+    try:
+        ensure_airport_code_is_available(
+            connection,
+            airport_code,
+            exclude_destination_id=destination_id,
+        )
 
-    return (
-        update_destination_airport_code(connection, destination_id, airport_code) == 1
-    )
+        success = (
+            update_destination_airport_code(
+                connection,
+                destination_id,
+                airport_code,
+            )
+            == 1
+        )
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_destination_city(connection, destination_id, city):
-    return update_destination_city(connection, destination_id, city) == 1
+    try:
+        success = update_destination_city(connection, destination_id, city) == 1
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_destination_country(connection, destination_id, country):
-    return update_destination_country(connection, destination_id, country) == 1
+    try:
+        success = (
+            update_destination_country(
+                connection,
+                destination_id,
+                country,
+            )
+            == 1
+        )
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def list_destinations(connection):

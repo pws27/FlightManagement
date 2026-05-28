@@ -25,15 +25,56 @@ def get_pilot_schedule(connection, pilot_id):
 
 
 def create_pilot(connection, first_name, last_name):
-    return add_pilot(connection, first_name, last_name)
+    try:
+        pilot_id = add_pilot(connection, first_name, last_name)
+
+        connection.commit()
+
+        return pilot_id
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_pilot_first_name(connection, pilot_id, first_name):
-    return update_pilot_first_name(connection, pilot_id, first_name) == 1
+    try:
+        success = (
+            update_pilot_first_name(
+                connection,
+                pilot_id,
+                first_name,
+            )
+            == 1
+        )
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def change_pilot_last_name(connection, pilot_id, last_name):
-    return update_pilot_last_name(connection, pilot_id, last_name) == 1
+    try:
+        success = (
+            update_pilot_last_name(
+                connection,
+                pilot_id,
+                last_name,
+            )
+            == 1
+        )
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise
 
 
 def list_pilots(connection):
@@ -41,4 +82,13 @@ def list_pilots(connection):
 
 
 def remove_pilot(connection, pilot_id):
-    return delete_pilot(connection, pilot_id) == 1
+    try:
+        success = delete_pilot(connection, pilot_id) == 1
+
+        connection.commit()
+
+        return success
+
+    except Exception:
+        connection.rollback()
+        raise

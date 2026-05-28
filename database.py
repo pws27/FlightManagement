@@ -105,10 +105,15 @@ def initialise_database(reset=False):
 def database_exists():
     return os.path.exists(DB_NAME)
 
+
 def ensure_data_directory_exists():
     os.makedirs("data", exist_ok=True)
 
+
 def get_connection():
+
+    ensure_data_directory_exists()
+
     connection = sqlite3.connect(DB_NAME)
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
@@ -340,9 +345,7 @@ def generate_flight_data(number_of_flights):
         )
 
         available_pilots = [
-            pilot_id
-            for pilot_id in range(1, 13)
-            if pilot_id not in assigned_pilots
+            pilot_id for pilot_id in range(1, 13) if pilot_id not in assigned_pilots
         ]
 
         pilot_id = random.choice([None] + available_pilots)

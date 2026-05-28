@@ -88,7 +88,6 @@ def update_destination_action(connection):
         print("That airport code already exists.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not update destination: {error}")
 
 
@@ -127,7 +126,6 @@ def add_destination_action(connection):
         print("That airport code already exists.")
 
     except Exception as error:
-        connection.rollback()
         print(f"Could not add destination: {error}")
 
 
